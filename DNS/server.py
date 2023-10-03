@@ -58,13 +58,14 @@ class DNSServer(UDPDevice):
         # }
         
         recvdp = DNSPacket(data)
-        if recvdp.qtype == 1:
+        if recvdp.qtype >= 0:
             if recvdp.name in self.url_ip:
                 if self.url_ip[recvdp.name] == "0.0.0.0":
-                    senddp = DNSPacket(recvdp.generate_response(self.url_ip[recvdp.name], True))
+                    senddp = recvdp.generate_response(self.url_ip[recvdp.name], True)
                 else:
-                    senddp = DNSPacket(recvdp.generate_response(self.url_ip[recvdp.name], False))
+                    senddp = recvdp.generate_response(self.url_ip[recvdp.name], False)
             else:
-                senddp = DNSPacket(recvdp.generate_request(recvdp.name))
-            return senddp.data
+                senddp = recvdp.generate_request(recvdp.name)
+            
+            self.send(senddp)
         pass
