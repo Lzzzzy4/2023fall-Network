@@ -54,6 +54,8 @@ class GBNSender(Device, OutMixIn):
         self.out.put(packet)
 
     def run(self, env: Environment):
+        self.send_available()
+        print("A")
         yield self.finish_channel.get()
 
     def put(self, packet: Packet):
@@ -65,6 +67,23 @@ class GBNSender(Device, OutMixIn):
         （4）检查是否发送完message，若发送完毕则告知结束: self.finish_channel.put(True)
         """
         ackno = packet.packet_id
+        print(ackno)
+        i = 0
+        for i in range(0,len(self.outbound)):
+            if ackno == self.outbound[i].packet_id:
+                break
+        if i == len(self.outbound):
+            return
+        else:
+            for j in range (0,i+1):
+                self.outbound.popleft()
+        # self.seqno_start = self.outbound[0].packet_id
+        
+        self.send_available()
+        self.timer.restart(self.timeout)
+        if(self.absno == self.message.__len__ and len(self.outbound) == 0):#all sended and acked
+            self.finish_channel.put(True)
+        return
 
     def send_available(self):
         """
@@ -75,15 +94,32 @@ class GBNSender(Device, OutMixIn):
         通过`self.finish_channel.get()`获取状态
         即当`self.finish_channel.put(True)`时发送端模拟结束
         """
+        if(self.window_size == len(self.outbound)):
+            return
+        else:
+            for i in range(0,self.window_size - len(self.outbound)):
+                if(self.absno == len(self.message)):
+                    break
+                p = self.new_packet(self.absno,self.message[self.absno])
+                self.outbound.append(p)
+                self.send_packet(p)
+                self.absno = self.absno + 1
+        self.timer.restart(self.timeout)
+        # if(self.finish_channel.get() == True):
+            
         pass
     
     def timeout_callback(self):
+        while 1:
+            pass
         self.dprint("timeout")
         """
         TODO: 
         （1）超时重传所有已发送但还未被确认过的分组
         （2）注意这个函数结束会自动重置定时器，不用手动重置
         """
+        for i in range(0,len(self.outbound)):
+            self.send_packet(self.outbound[i])
 
     def dprint(self, s):
         if self.debug:
