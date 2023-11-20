@@ -35,27 +35,6 @@ class DNSServer(UDPDevice):
             2.1 如果domain name在self.url_ip中，构建对应的应答数据包，发送给客户端
             2.2 如果domain name不再self.url_ip中，将DNS请求发送给public DNS server
         """
-
-        # 以下是伪代码 请为我实现
-        # function recv_callback(data){
-        #     # process DNS requests
-        #     resolve data to DNS frame recvdp
-        #     if recvdp is a query message{
-        #         if recvdp.qname is in url_ip table{
-        #             if url_ip[recvdp.qname]="0.0.0.0"{
-        #                 generate a reply error data
-        #             }
-        #             else{
-        #                 generate response data
-        #             }
-        #         }
-        #         else{
-        #             send query message to public DNS server
-        #             receive data from public server
-        #         }
-        #         send data to client
-        #     }
-        # }
         
         recvdp = DNSPacket(data)
         if recvdp.qtype >= 0:
